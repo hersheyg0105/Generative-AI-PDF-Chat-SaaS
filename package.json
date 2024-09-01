@@ -17,6 +17,7 @@
     "@pinecone-database/pinecone": "^3.0.2",
     "@radix-ui/react-slot": "^1.1.0",
     "@react-pdf/renderer": "^3.4.4",
+    "byte-size": "^9.0.0",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "firebase": "^10.13.0",
@@ -36,6 +37,7 @@
     "uuid": "^10.0.0"
   },
   "devDependencies": {
+    "@types/byte-size": "^8.1.2",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
