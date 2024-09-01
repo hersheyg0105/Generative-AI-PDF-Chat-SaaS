@@ -1,15 +1,21 @@
 "use client";
-import React, { FormEvent, useEffect, useState, useTransition } from "react";
+import React, {
+  FormEvent,
+  useEffect,
+  useRef,
+  useState,
+  useTransition,
+} from "react";
 
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { askQuestion, Message } from "@/actions/askQuestion";
 import { Loader, Loader2Icon } from "lucide-react";
-import { ChatMessage } from "./ChatMessage";
 import { useCollection } from "react-firebase-hooks/firestore";
 import { useUser } from "@clerk/nextjs";
 import { collection, orderBy, query } from "firebase/firestore";
 import { db } from "@/firebase";
+import ChatMessage from "./ChatMessage";
 
 export type Message = {
   id?: string;
@@ -24,6 +30,7 @@ function Chat({ id }: { id: string }) {
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [isPending, startTransition] = useTransition();
+  const bottomOfChatReference = useRef<HTMLDivElement>(null);
 
   const [snapshot, loading, error] = useCollection(
     user &&
@@ -60,6 +67,12 @@ function Chat({ id }: { id: string }) {
   };
 
   useEffect(() => {
+    bottomOfChatReference.current?.scrollIntoView({
+      behavior: "smooth",
+    });
+  }, [snapshot]);
+
+  useEffect(() => {
     if (!snapshot) {
       return;
     }
@@ -87,12 +100,34 @@ function Chat({ id }: { id: string }) {
   return (
     <div className="flex flex-col h-full overflow-scroll">
       {/* Chat Contents */}
-      {messages.map((message) => (
-        <div key={message.id}>
-          <p>{message.message}</p>
-        </div>
-      ))}
-      <div className="flex-1 w-full">{/* Chat messages */}</div>
+
+      <div className="flex-1 w-full">
+        {/* Chat messages */}
+        {loading ? (
+          <div className="flex items-center justify-center">
+            <Loader2Icon className="animate-spin h-20 w-20 text-indigo-600 mt-20" />
+          </div>
+        ) : (
+          <div className="p-5">
+            {messages.length === 0 && (
+              <ChatMessage
+                key={"placeholder"}
+                message={{
+                  role: "ai",
+                  message: "Ask me anything about the document",
+                  createdAt: new Date(),
+                }}
+              />
+            )}
+
+            {messages.map((message, index) => (
+              <ChatMessage key={index} message={message} />
+            ))}
+
+            <div ref={bottomOfChatReference} />
+          </div>
+        )}
+      </div>
       <form
         onSubmit={handleSubmit}
         className="flex sticky bottom-0 space-x-2 p-5 bg-indigo-600/75"
