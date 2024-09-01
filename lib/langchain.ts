@@ -24,6 +24,34 @@ const model = new ChatOpenAI({
 
 export const indexName = "pdfchat";
 
+async function fetchMessagesFromDB(docId: string) {
+  const { userId } = await auth();
+  if (!userId) {
+    throw new Error("User not found");
+  }
+
+  console.log("Fetching chat history from the firestore database");
+  const chats = await adminDB
+    .collection("users")
+    .doc(userId)
+    .collection("files")
+    .doc(docId)
+    .collection("chat")
+    .orderBy("createdAt", "desc")
+    .get();
+
+  const chatHistory = chats.docs.map((doc) =>
+    doc.data().role === "human"
+      ? new HumanMessage(doc.data().message)
+      : new AIMessage(doc.data().message)
+  );
+
+  console.log(`fetched last ${chatHistory.length} messages successfully`);
+  console.log(chatHistory.map((msg) => msg.content.toString()));
+
+  return chatHistory;
+}
+
 export async function generateDocs(docId: string) {
   const { userId } = await auth();
   if (!userId) {
@@ -115,3 +143,73 @@ export async function geneateEmbeddingsInPineconeVectorStore(docId: string) {
     return pineConeVectorStore;
   }
 }
+
+const generateLangChainCompletion = async (docId: string, question: string) => {
+  let pineconeVectorStore;
+  pineconeVectorStore = await geneateEmbeddingsInPineconeVectorStore(docId);
+
+  if (!pineconeVectorStore) {
+    throw new Error("Pinecone vector store not found");
+  }
+
+  console.log("Creating a retriever to search through vector store");
+  const retriever = pineconeVectorStore.asRetriever();
+
+  const chatHistory = await fetchMessagesFromDB(docId);
+
+  console.log("Defining a prompt template");
+
+  const historyAwarePrompt = ChatPromptTemplate.fromMessages([
+    ...chatHistory,
+    ["user", "{input}"],
+    [
+      "user",
+      "Given the above conversation, generate a search query to look up in order to get information relevant to the conversation",
+    ],
+  ]);
+
+  console.log("creating a history aware retriever chain");
+  const historyAwareRetrieverChain = await createHistoryAwareRetriever({
+    llm: model,
+    retriever,
+    rephrasePrompt: historyAwarePrompt,
+  });
+
+  // define a promt tempalte for answering questions
+  console.log("Defining a prompt template for answering questions");
+  const historyAwareRetrievalPrompt = ChatPromptTemplate.fromMessages([
+    [
+      "system",
+      "Answer the user's questions based on the below context:\n\n {context}",
+    ],
+
+    ...chatHistory,
+
+    ["user", "{input}"],
+  ]);
+
+  // creating a chain to combine the retrieved documents to coherent response
+  console.log("creating a document combining chain");
+  const hisotryAwareCombineDocsChain = await createStuffDocumentsChain({
+    llm: model,
+    prompt: historyAwareRetrievalPrompt,
+  });
+
+  //create the main retriever chain that combines the history-aware retriever and the document combing chains
+  console.log(" creating the main retriever chain....");
+  const conversationalRetrievalChain = await createRetrievalChain({
+    retriever: historyAwareRetrieverChain,
+    combineDocsChain: hisotryAwareCombineDocsChain,
+  });
+
+  console.log("running the chain with a sample conversation");
+  const reply = await conversationalRetrievalChain.invoke({
+    chat_history: chatHistory,
+    input: question,
+  });
+
+  console.log(reply.answer);
+  return reply.answer;
+};
+
+export { model, generateLangChainCompletion };
