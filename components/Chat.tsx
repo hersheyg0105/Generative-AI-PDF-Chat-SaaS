@@ -9,7 +9,7 @@ import React, {
 
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
-import { askQuestion, Message } from "@/actions/askQuestion";
+import { askQuestion } from "@/actions/askQuestion";
 import { Loader, Loader2Icon } from "lucide-react";
 import { useCollection } from "react-firebase-hooks/firestore";
 import { useUser } from "@clerk/nextjs";

@@ -21,16 +21,19 @@ function FileUploader() {
     }
   }, [fileId, router]);
 
-  const onDrop = useCallback(async (acceptedFiles: File[]) => {
-    console.log(acceptedFiles);
-    const file = acceptedFiles[0];
-    if (file) {
-      await handleUpload(file);
-    } else {
-      // do nothing
-      // toast notification
-    }
-  }, []);
+  const onDrop = useCallback(
+    async (acceptedFiles: File[]) => {
+      console.log(acceptedFiles);
+      const file = acceptedFiles[0];
+      if (file) {
+        await handleUpload(file);
+      } else {
+        // do nothing
+        // toast notification
+      }
+    },
+    [handleUpload]
+  );
 
   const statusIcons: {
     [key in StatusText]: JSX.Element;
