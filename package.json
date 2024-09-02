@@ -16,6 +16,7 @@
     "@langchain/pinecone": "^0.0.9",
     "@pinecone-database/pinecone": "^3.0.2",
     "@radix-ui/react-slot": "^1.1.0",
+    "@radix-ui/react-toast": "^1.2.1",
     "@react-pdf/renderer": "^3.4.4",
     "@stripe/stripe-js": "^4.4.0",
     "byte-size": "^9.0.0",
