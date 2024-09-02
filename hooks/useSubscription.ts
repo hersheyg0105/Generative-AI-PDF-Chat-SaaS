@@ -35,7 +35,7 @@ function useSubscription() {
     if (!data) {
       return;
     }
-    setHasActiveMembership(data.activeMembership);
+    setHasActiveMembership(data.hasActiveMembership);
   }, [snapshot]);
 
   useEffect(() => {
