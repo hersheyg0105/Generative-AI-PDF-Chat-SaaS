@@ -23,4 +23,4 @@ This project is a Generative AI application that allows users to upload PDFs and
 7. **Shadcn**: used for enhanced UI elements
 8. **Next.js**: Used for building the frontend and handling server-side rendering.
 9. **Tailwind CSS**: Utilized for styling the user interface with a responsive and modern design.
-10. Vercel\*\*: Used for deploying application
+10. **Vercel**: Used for deploying application
