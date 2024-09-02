@@ -45,7 +45,7 @@ function FileUploader() {
         // toast notification
       }
     },
-    [handleUpload]
+    [handleUpload, filesLoading, isOverFileLimit, toast]
   );
 
   const statusIcons: {
